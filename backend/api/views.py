@@ -7,8 +7,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .filters import RecipeFilter
 
+from .filters import RecipeFilter
 from .models import (CustomUser, Favorites, Follow, Ingredient, Recipe,
                      ShoppingList, Tag)
 from .permissions import IsAuthor

@@ -1,7 +1,7 @@
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from .models import CustomUser, Follow, Ingredient, Recipe, Tag
-from drf_extra_fields.fields import Base64ImageField
 
 BASE_URL = 'http://127.0.0.1'
 
