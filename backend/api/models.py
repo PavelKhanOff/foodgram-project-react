@@ -91,7 +91,7 @@ class ShoppingList(models.Model):
 
     class Meta:
         verbose_name = 'Покупка'
-        verbose_name_plural = 'Списки Покупок'
+        verbose_name_plural = 'Покупки'
 
 
 class Favorites(models.Model):
