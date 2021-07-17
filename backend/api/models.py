@@ -54,12 +54,14 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         CustomUser, on_delete=models.PROTECT, related_name='recipes')
     name = models.CharField(max_length=50)
-    image = models.ImageField(upload_to="static/", verbose_name="Фото блюда")
+    image = models.ImageField(verbose_name="Фото блюда")
     text = models.TextField(max_length=1000)
     ingredients = models.ManyToManyField(
         Ingredient, related_name='ingredients')
     tags = models.ManyToManyField(Tag, related_name='tags')
-    cooking_time = models.TimeField(
+    pub_date = models.DateTimeField(
+        auto_now_add=True, verbose_name="Дата публикации")
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления')
     is_favorited = models.ManyToManyField(
         CustomUser,
@@ -73,6 +75,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
+        ordering = ["-pub_date"]
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 

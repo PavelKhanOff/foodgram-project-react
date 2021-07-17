@@ -7,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .filters import RecipeFilter
 
 from .models import (CustomUser, Favorites, Follow, Ingredient, Recipe,
                      ShoppingList, Tag)
@@ -27,8 +28,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
-    filterset_fields = ['author', 'is_favorited',
-                        'tags', 'is_in_shopping_cart']
+    filter_class = RecipeFilter
 
     def get_permissions(self):
         if self.action == 'create':

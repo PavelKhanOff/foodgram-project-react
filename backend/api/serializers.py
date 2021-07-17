@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import CustomUser, Follow, Ingredient, Recipe, Tag
+from drf_extra_fields.fields import Base64ImageField
 
 BASE_URL = 'http://127.0.0.1'
 
@@ -60,10 +61,10 @@ class ListRecipeUserSerializer(serializers.ModelSerializer):
         current_user = self.context['request'].user
         other_user = user.following.all()
         if len(other_user) == 0:
-            return 0
+            return False
         if current_user.id in [i.user.id for i in other_user]:
-            return 1
-        return 0
+            return True
+        return False
 
 
 class ListRecipeSerializer(serializers.ModelSerializer):
@@ -146,12 +147,12 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
         current_user = self.context.get('current_user')
         other_user = user.following.all()
         if user.is_anonymous:
-            return 0
+            return False
         if len(other_user) == 0:
-            return 0
+            return False
         if current_user.id in [i.user.id for i in other_user]:
-            return 1
-        return 0
+            return True
+        return False
 
 
 class ShowIngredientsSerializer(serializers.ModelSerializer):
@@ -162,12 +163,7 @@ class ShowIngredientsSerializer(serializers.ModelSerializer):
 
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(
-        max_length=None,
-        required=True,
-        allow_empty_file=False,
-        use_url=True,
-    )
+    image = Base64ImageField(required=False)
     ingredients = ShowFollowerRecipeSerializer(many=True, read_only=True)
 
     class Meta:

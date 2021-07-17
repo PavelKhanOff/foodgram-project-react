@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         current_user = self.context['request'].user
         other_user = user.following.all()
         if len(other_user) == 0:
-            return 0
+            return False
         if current_user.id in [i.user.id for i in other_user]:
-            return 1
-        return 0
+            return True
+        return False
