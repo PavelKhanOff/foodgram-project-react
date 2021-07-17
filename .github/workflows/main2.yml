@@ -42,6 +42,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_LOGIN }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Push to Docker Hub
+        context: ./backend/
         uses: docker/build-push-action@v2 # Выполняет push образа в DockerHub 
         with:
           push: true
@@ -52,8 +53,6 @@ jobs:
     needs: build_and_push_to_docker_hub
     if: github.ref == 'refs/heads/master'
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
