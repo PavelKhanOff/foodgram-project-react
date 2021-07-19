@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import RecipeFilter
-from .models import (CustomUser, Favorites, Follow, Ingredient, Recipe,
-                     ShoppingList, Tag, IngredientInRecipe)
+from .models import (CustomUser, Favorites, Follow, Ingredient,
+                     IngredientInRecipe, Recipe, ShoppingList, Tag)
 from .permissions import IsAuthor
 from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
                           IngredientSerializer, ListRecipeSerializer,

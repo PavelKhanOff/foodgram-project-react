@@ -1,9 +1,9 @@
+from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from .models import CustomUser, Follow, Ingredient, \
-    Recipe, Tag, Favorites, ShoppingList, IngredientInRecipe
-from djoser.serializers import UserSerializer as BaseUserSerializer
+from .models import (CustomUser, Favorites, Follow, Ingredient,
+                     IngredientInRecipe, Recipe, ShoppingList, Tag)
 
 BASE_URL = 'http://127.0.0.1'
 
