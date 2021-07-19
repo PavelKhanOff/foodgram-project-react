@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from .filters import RecipeFilter
 from .models import (CustomUser, Favorites, Follow, Ingredient, Recipe,
-                     ShoppingList, Tag)
+                     ShoppingList, Tag, IngredientInRecipe)
 from .permissions import IsAuthor
 from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
                           IngredientSerializer, ListRecipeSerializer,
@@ -38,22 +38,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return AllowAny(),
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return ListRecipeSerializer
-        if self.action == 'retrieve':
+        if self.action in ['list', 'retrieve']:
             return ListRecipeSerializer
         return CreateRecipeSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -126,14 +118,14 @@ class FavouriteViewSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        try:
-            add_favourite = Favorites.objects.get(user=user, recipe=recipe)
-            add_favourite.delete()
-            return Response('Удалено',
-                            status=status.HTTP_204_NO_CONTENT)
-        except Exception:
-            return Response('Рецепт не был в избранном',
-                            status=status.HTTP_400_BAD_REQUEST)
+        favorite_obj = Favorites.objects.get(user=user, recipe=recipe)
+        if not favorite_obj:
+            return Response(
+                'Рецепт не был в избранном',
+                status=status.HTTP_400_BAD_REQUEST)
+        favorite_obj.delete()
+        return Response(
+            'Удалено', status=status.HTTP_204_NO_CONTENT)
 
 
 class ShoppingListViewSet(APIView):
@@ -142,11 +134,11 @@ class ShoppingListViewSet(APIView):
     def get(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        if ShoppingList.objects.filter(user=user, purchase=recipe).exists():
+        if ShoppingList.objects.filter(user=user, recipe=recipe).exists():
             return Response(
                 'Вы уже добавили рецепт в список покупок',
                 status=status.HTTP_400_BAD_REQUEST)
-        ShoppingList.objects.create(user=user, purchase=recipe)
+        ShoppingList.objects.create(user=user, recipe=recipe)
         serializer = AddFavouriteRecipeSerializer(recipe)
         return Response(
             serializer.data,
@@ -155,16 +147,14 @@ class ShoppingListViewSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        try:
-            add_shopping_list = ShoppingList.objects.get(
-                user=user, purchase=recipe)
-            add_shopping_list.delete()
-            return Response(
-                'Удалено', status=status.HTTP_204_NO_CONTENT)
-        except Exception:
+        shopping_list_obj = ShoppingList.objects.get(user=user, recipe=recipe)
+        if not shopping_list_obj:
             return Response(
                 'Рецепт не был в списке покупок',
                 status=status.HTTP_400_BAD_REQUEST)
+        shopping_list_obj.delete()
+        return Response(
+            'Удалено', status=status.HTTP_204_NO_CONTENT)
 
 
 class DownloadShoppingCart(APIView):
@@ -172,26 +162,28 @@ class DownloadShoppingCart(APIView):
 
     def get(self, request):
         user = request.user
-        users_shopping_list_recipes = user.purchases.all()
-        recipes = []
-        for i in users_shopping_list_recipes:
-            recipes.append(i.purchase)
-        ingredients = []
-        for recipe in recipes:
-            ingredients.append(recipe.ingredients.all())
-        new_ingredients = []
-        for set in ingredients:
-            for ingredient in set:
-                new_ingredients.append(ingredient)
-        ingredients_dict = {}
-        for ing in new_ingredients:
-            if ing in ingredients_dict.keys():
-                ingredients_dict[ing] += ing.quantity
-            else:
-                ingredients_dict[ing] = ing.quantity
+        shopping_cart = user.purchases.all()
+        buying_list = {}
+        for record in shopping_cart:
+            recipe = record.recipe
+            ingredients = IngredientInRecipe.objects.filter(recipe=recipe)
+            for ingredient in ingredients:
+                amount = ingredient.amount
+                name = ingredient.ingredient.name
+                measurement_unit = ingredient.ingredient.measurement_unit
+                if name not in buying_list:
+                    buying_list[name] = {
+                        'measurement_unit': measurement_unit,
+                        'amount': amount
+                    }
+                else:
+                    buying_list[name]['amount'] = (buying_list[name]['amount']
+                                                   + amount)
+
         wishlist = []
-        for k, v in ingredients_dict.items():
-            wishlist.append(f'{k.name} - {v} {k.unit} \n')
+        for item in buying_list:
+            wishlist.append(f'{item} - {buying_list[item]["amount"]} '
+                            f'{buying_list[item]["measurement_unit"]} \n')
         wishlist.append('\n')
         wishlist.append('FoodGram, 2021')
         response = HttpResponse(wishlist, 'Content-Type: text/plain')
