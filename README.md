@@ -45,4 +45,6 @@ DB_PORT=db_port
 https://github.com/pavelkhanoff/foodgram-project-react/actions/workflows/main.yml/badge.svg
 #### Server address:
 130.193.52.127
-
+#### Superuser pass&email:
+email: admin@admin.ru
+pass: admin
