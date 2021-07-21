@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import RecipeFilter
-from .models import (CustomUser, Favorites, Follow, Ingredient,
+from .models import (CustomUser, Favorite, Follow, Ingredient,
                      IngredientInRecipe, Recipe, ShoppingList, Tag)
 from .permissions import IsAuthor
 from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
@@ -61,9 +61,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 @permission_classes([IsAuthenticated])
 def showfollows(request):
     users = request.user.followers.all()
-    user_obj = []
-    for follow_obj in users:
-        user_obj.append(follow_obj.author)
+    user_obj = [follow_obj.author for follow_obj in users]
     paginator = PageNumberPagination()
     paginator.page_size = 10
     result_page = paginator.paginate_queryset(user_obj, request)
@@ -88,9 +86,9 @@ class FollowViewSet(APIView):
 
     def delete(self, request, user_id):
         user = request.user
-        author = CustomUser.objects.get(id=user_id)
+        author = get_object_or_404(CustomUser, id=user_id)
         try:
-            follow = Follow.objects.get(user=user, author=author)
+            follow = get_object_or_404(user=user, author=author)
             follow.delete()
             return Response('Удалено',
                             status=status.HTTP_204_NO_CONTENT)
@@ -105,11 +103,11 @@ class FavouriteViewSet(APIView):
     def get(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        if Favorites.objects.filter(user=user, recipe=recipe).exists():
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
             return Response(
                 'Вы уже добавили рецепт в избранное',
                 status=status.HTTP_400_BAD_REQUEST)
-        Favorites.objects.create(user=user, recipe=recipe)
+        Favorite.objects.create(user=user, recipe=recipe)
         serializer = AddFavouriteRecipeSerializer(recipe)
         return Response(
             serializer.data,
@@ -118,7 +116,7 @@ class FavouriteViewSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        favorite_obj = Favorites.objects.get(user=user, recipe=recipe)
+        favorite_obj = get_object_or_404(Favorite, user=user, recipe=recipe)
         if not favorite_obj:
             return Response(
                 'Рецепт не был в избранном',
@@ -147,7 +145,8 @@ class ShoppingListViewSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        shopping_list_obj = ShoppingList.objects.get(user=user, recipe=recipe)
+        shopping_list_obj = get_object_or_404(
+            ShoppingList, user=user, recipe=recipe)
         if not shopping_list_obj:
             return Response(
                 'Рецепт не был в списке покупок',

@@ -4,29 +4,30 @@ from users.models import CustomUser
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
-                             related_name='followers')
-    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
-                               related_name='following')
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE,
+        related_name='followers',
+        verbose_name='Пользователь подписчик')
+    author = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Пользователь на которого подписываемся')
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [models.UniqueConstraint(
+            fields=['user', 'author'], name='unique_follow')]
 
     def __str__(self):
         return f'{self.user} => {self.author}'
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50)
-    hex_color = models.CharField(max_length=7, default="#ffffff")
-    slug = models.SlugField(max_length=50)
-
-    def colored_name(self):
-        return format_html(
-            '<span style="color: #{};">{}</span>',
-            self.hex_color,
-        )
+    name = models.CharField(max_length=50, verbose_name='Название тэга')
+    hex_color = models.CharField(
+        max_length=7, default="#ffffff", verbose_name='Цвет тэга')
+    slug = models.SlugField(max_length=50, verbose_name='Slug тэга')
 
     class Meta:
         verbose_name = 'Тэг'
@@ -34,6 +35,12 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+    def colored_name(self):
+        return format_html(
+            '<span style="color: #{};">{}</span>',
+            self.hex_color,
+        )
 
 
 class Ingredient(models.Model):
@@ -58,24 +65,27 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        CustomUser, on_delete=models.PROTECT, related_name='recipes')
-    name = models.CharField(max_length=50)
-    image = models.ImageField(verbose_name="Фото блюда", upload_to='recipes')
-    text = models.TextField(max_length=1000)
+        CustomUser, on_delete=models.PROTECT,
+        related_name='recipes', verbose_name='Автор рецепта')
+    name = models.CharField(max_length=50, verbose_name='Название рецепта')
+    image = models.ImageField(
+        verbose_name="Фото блюда", upload_to='recipes')
+    text = models.TextField(max_length=1000, verbose_name='Описание рецепта')
     ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientInRecipe',
-        related_name='recipes'
+        related_name='recipes', verbose_name='Ингредиенты рецепта'
     )
     tags = models.ManyToManyField(
-        Tag, related_name='tags', blank=True, null=True)
+        Tag, related_name='recipes', blank=True,
+        null=True, verbose_name='Тэги рецепта')
     pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="Дата публикации")
+        auto_now_add=True, verbose_name='Дата публикации')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления')
 
     class Meta:
-        ordering = ["-pub_date"]
+        ordering = ['-pub_date']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -123,12 +133,13 @@ class ShoppingList(models.Model):
         verbose_name_plural = 'Покупки'
 
 
-class Favorites(models.Model):
+class Favorite(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
-        related_name="favorite_subscriber")
+        related_name="favorite_subscriber", verbose_name='Пользователь')
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name="favorite_recipe")
+        Recipe, on_delete=models.CASCADE, related_name="favorite_recipe",
+        verbose_name='Рецепт')
     when_added = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата добавления'
     )

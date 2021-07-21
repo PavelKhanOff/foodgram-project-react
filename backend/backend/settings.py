@@ -106,6 +106,13 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 REST_FRAMEWORK = {
+    "DEFAULT_VERSIONING_CLASS":
+        "rest_framework.versioning.QueryParameterVersioning",
+
+    "DEFAULT_VERSION": "v1.0.0",
+
+    "ALLOWED_VERSIONS": "v1.0.0",
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],

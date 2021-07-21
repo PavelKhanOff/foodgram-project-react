@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Favorites, Follow, Ingredient, Recipe, ShoppingList, Tag
+from .models import Favorite, Follow, Ingredient, Recipe, ShoppingList, Tag
 
 
 class RecipeAdmin(admin.ModelAdmin):
@@ -9,7 +9,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(empty_value=None)
     def followers(self, obj):
-        return len(obj.favorite_recipe.all())
+        return obj.favorite_recipe.all().count()
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -20,5 +20,5 @@ admin.site.register(Follow)
 admin.site.register(Tag)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Favorites)
+admin.site.register(Favorite)
 admin.site.register(ShoppingList)

@@ -2,7 +2,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from .models import (CustomUser, Favorites, Follow, Ingredient,
+from .models import (CustomUser, Favorite, Follow, Ingredient,
                      IngredientInRecipe, Recipe, ShoppingList, Tag)
 
 BASE_URL = 'http://127.0.0.1'
@@ -62,9 +62,9 @@ class ListRecipeUserSerializer(serializers.ModelSerializer):
     def check_if_is_subscribed(self, user):
         current_user = self.context['request'].user
         other_user = user.following.all()
-        if len(other_user) == 0:
+        if other_user.count() == 0:
             return False
-        if current_user.id in [i.user.id for i in other_user]:
+        if Follow.objects.get(user=user, author=current_user).exists():
             return True
         return False
 
@@ -110,7 +110,7 @@ class ListRecipeSerializer(serializers.ModelSerializer):
         if request is None:
             return False
         user = request.user
-        return Favorites.objects.filter(recipe=obj, user=user).exists()
+        return Favorite.objects.filter(recipe=obj, user=user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
@@ -168,9 +168,9 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
         other_user = user.following.all()
         if user.is_anonymous:
             return False
-        if len(other_user) == 0:
+        if other_user.count() == 0:
             return False
-        if current_user.id in [i.user.id for i in other_user]:
+        if Follow.objects.get(user=user, author=current_user).exists():
             return True
         return False
 
@@ -226,7 +226,7 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
         if request is None:
             return False
         user = request.user
-        return Favorites.objects.filter(recipe=obj, user=user).exists()
+        return Favorite.objects.filter(recipe=obj, user=user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
