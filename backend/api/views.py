@@ -11,12 +11,12 @@ from rest_framework.views import APIView
 from .filters import RecipeFilter
 from .models import (CustomUser, Favorite, Follow, Ingredient,
                      IngredientInRecipe, Recipe, ShoppingList, Tag)
+from .paginators import PageNumberPaginatorModified
 from .permissions import IsAuthor
 from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
                           IngredientSerializer, ListRecipeSerializer,
                           ShowFollowersSerializer, TagSerializer,
                           UserSerializer)
-from .paginators import PageNumberPaginatorModified
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
