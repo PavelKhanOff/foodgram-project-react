@@ -16,6 +16,7 @@ from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
                           IngredientSerializer, ListRecipeSerializer,
                           ShowFollowersSerializer, TagSerializer,
                           UserSerializer)
+from .paginators import PageNumberPaginatorModified
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -29,6 +30,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filter_class = RecipeFilter
+    pagination_class = PageNumberPaginatorModified
 
     def get_permissions(self):
         if self.action == 'create':
@@ -60,8 +62,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['GET', ])
 @permission_classes([IsAuthenticated])
 def showfollows(request):
-    users = request.user.followers.all()
-    user_obj = [follow_obj.author for follow_obj in users]
+    user_obj = CustomUser.objects.filter(following__user=request.user)
     paginator = PageNumberPagination()
     paginator.page_size = 10
     result_page = paginator.paginate_queryset(user_obj, request)
@@ -87,14 +88,10 @@ class FollowViewSet(APIView):
     def delete(self, request, user_id):
         user = request.user
         author = get_object_or_404(CustomUser, id=user_id)
-        try:
-            follow = get_object_or_404(user=user, author=author)
-            follow.delete()
-            return Response('Удалено',
-                            status=status.HTTP_204_NO_CONTENT)
-        except Exception:
-            return Response('Подписки не было',
-                            status=status.HTTP_400_BAD_REQUEST)
+        follow = get_object_or_404(Follow, user=user, author=author)
+        follow.delete()
+        return Response('Удалено',
+                        status=status.HTTP_204_NO_CONTENT)
 
 
 class FavouriteViewSet(APIView):
