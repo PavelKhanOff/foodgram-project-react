@@ -12,7 +12,7 @@ from .filters import RecipeFilter
 from .models import (CustomUser, Favorite, Follow, Ingredient,
                      IngredientInRecipe, Recipe, ShoppingList, Tag)
 from .paginators import PageNumberPaginatorModified
-from .permissions import IsAuthor
+from .permissions import AdminOrAuthorOrReadOnly
 from .serializers import (AddFavouriteRecipeSerializer, CreateRecipeSerializer,
                           IngredientSerializer, ListRecipeSerializer,
                           ShowFollowersSerializer, TagSerializer,
@@ -31,13 +31,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filter_class = RecipeFilter
     pagination_class = PageNumberPaginatorModified
-
-    def get_permissions(self):
-        if self.action == 'create':
-            return IsAuthenticated(),
-        if self.action in ['destroy', 'update', 'partial_update']:
-            return IsAuthor(),
-        return AllowAny(),
+    permission_classes = [AdminOrAuthorOrReadOnly, ]
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
