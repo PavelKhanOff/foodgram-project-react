@@ -248,15 +248,17 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                   'name', 'image', 'text', 'cooking_time')
 
     def create(self, validated_data):
+        tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
         for ingredient in ingredients_data:
             if ingredient['amount'] <= 0:
                 raise serializers.ValidationError(
                     'Количество ингридиента должно быть больше нуля!')
-        validated_data.pop('tags')
         author = self.context.get('request').user
         recipe = Recipe.objects.create(
             author=author, **validated_data)
+        recipe.save()
+        recipe.tags.set(tags_data)
         for ingredient in ingredients_data:
             ingredient_model = Ingredient.objects.get(id=ingredient['id'])
             amount = ingredient['amount']
@@ -268,8 +270,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags')
         ingredient_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
         for ingredient in ingredient_data:
             if ingredient['amount'] <= 0:
                 raise serializers.ValidationError(
@@ -287,6 +289,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             instance.image = validated_data.pop('image')
         instance.cooking_time = validated_data.pop('cooking_time')
         instance.save()
+        instance.tags.set(tags_data)
         return instance
 
     def to_representation(self, instance):
